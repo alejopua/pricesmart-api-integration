@@ -10,22 +10,11 @@ import {
 
 const router = express.Router();
 
-// Get all users
-router.get("/", getAllUsers);
-
-// Get user profile
-router.get("/:id", getUserById);
-
-// Register new user
-router.post("/register", registerUser);
-
-// Login user
-router.post("/login", loginUser);
-
-// Update user
-router.put("/:id", updateUser);
-
-// Delete user
-router.delete("/:id", deleteUser);
+router.get("/", getAllUsers); // Get all users
+router.get("/:id", getUserById); // Get user profile
+router.post("/login", loginUser); // Login user
+router.put("/:id", updateUser); // Update user
+router.delete("/:id", deleteUser); // Delete user
+router.post("/register", registerUser); // Register new user
 
 export default router;
