@@ -9,19 +9,11 @@ import {
 
 const router = express.Router();
 
-// Get all products
-router.get("/", getAllProducts);
-
-// Get single product
-router.get("/:id", getProductById);
-
-// Create new product
-router.post("/", createProduct);
-
-// Update product
-router.put("/:id", updateProduct);
-
-// Delete product
-router.delete("/:id", deleteProduct);
+// Rutas de productos
+router.post("/", createProduct); // Crear nuevo producto
+router.get("/", getAllProducts); // Obtener todos los productos
+router.get("/:id", getProductById); // Obtener un producto por ID
+router.put("/:id", updateProduct); // Actualizar un producto
+router.delete("/:id", deleteProduct); // Eliminar un producto
 
 export default router;
