@@ -1,19 +1,22 @@
 {
-  "name": "api_pricesmart",
+  "name": "pricesmart-api",
   "version": "1.0.0",
-  "main": "index.js",
   "type": "module",
+  "description": "PriceSmart API with MongoDB",
+  "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node scripts/testConnection.js",
+    "start": "node app.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "Api creada con express y mongodb para el proyecto de pricesmart",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "body-parse": "^0.1.0",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "mongodb": "^6.14.2"
+    "dotenv": "^16.4.5",
+    "express": "^4.18.3",
+    "mongodb": "^6.5.0",
+    "mongoose": "^8.2.1"
   }
 }
