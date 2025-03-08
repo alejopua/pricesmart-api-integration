@@ -1,8 +1,8 @@
 import express from "express";
 import {
+  createProduct,
   getAllProducts,
   getProductById,
-  createProduct,
   updateProduct,
   deleteProduct,
 } from "../controllers/productController.js";
