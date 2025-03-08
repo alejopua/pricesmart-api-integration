@@ -59,7 +59,7 @@ async function startServer() {
   }
 }
 
-// Manejar señales de terminación que se envía cuando presionas Ctrl+C en la terminal
+// Manejar señales de cierre del servidor
 process.on("SIGINT", async () => {
   console.log("\n👋 Cerrando servidor...");
   try {
