@@ -1,40 +1,43 @@
-import { ObjectId } from "mongodb";
-import dbClient from "../config/dbClient.js";
-
+import productSchema from "../schemas/products.js";
+import mongoose from "mongoose";
 class Product {
-  constructor() {
-    this.collection = "products";
-  }
-
-  // Obtener la colección
-  getCollection() {
-    return dbClient.getDb().collection(this.collection);
-  }
-
   // Crear un nuevo producto
   async create(productData) {
     try {
-      const collection = this.getCollection();
-      const result = await collection.insertOne({
-        ...productData,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isActive: true,
-      });
-
-      if (!result.acknowledged) {
-        throw new Error("Failed to create product");
-      }
-
-      return {
-        _id: result.insertedId,
-        ...productData,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isActive: true,
-      };
+      return await productSchema.create(productData);
     } catch (error) {
       console.error("Error in create product:", error);
+      throw error;
+    }
+  }
+
+  // Actualizar producto
+  async update(id, updateData) {
+    try {
+      return await productSchema.findOneAndUpdate(
+        { _id: new mongoose.Types.ObjectId(id), isActive: true },
+        updateData,
+        { new: true }
+      );
+    } catch (error) {
+      console.error("❌ Error en update producto:", error);
+      throw error;
+    }
+  }
+
+  // Soft delete
+  async softDelete(id) {
+    try {
+      return await productSchema.findOneAndUpdate(
+        { _id: new mongoose.Types.ObjectId(id), isActive: true },
+        {
+          isActive: false,
+          updatedAt: new Date(),
+        },
+        { returnDocument: "after" }
+      );
+    } catch (error) {
+      console.error("Error in softDelete product:", error);
       throw error;
     }
   }
@@ -42,8 +45,7 @@ class Product {
   // Encontrar todos los productos activos
   async findAll(query = {}) {
     try {
-      const collection = this.getCollection();
-      return await collection.find({ ...query, isActive: true }).toArray();
+      return await productSchema.find({ ...query, isActive: true });
     } catch (error) {
       console.error("Error in findAll products:", error);
       throw error;
@@ -53,69 +55,12 @@ class Product {
   // Encontrar producto por ID
   async findById(id) {
     try {
-      if (!ObjectId.isValid(id)) {
-        throw new Error("Invalid ID format");
-      }
-
-      const collection = this.getCollection();
-      return await collection.findOne({
-        _id: new ObjectId(id),
+      return await productSchema.findById({
+        _id: new mongoose.Types.ObjectId(id),
         isActive: true,
       });
     } catch (error) {
       console.error("Error in findById product:", error);
-      throw error;
-    }
-  }
-
-  // Actualizar producto
-  async update(id, updateData) {
-    try {
-      if (!ObjectId.isValid(id)) {
-        throw new Error("Invalid ID format");
-      }
-
-      const collection = this.getCollection();
-      const result = await collection.findOneAndUpdate(
-        { _id: new ObjectId(id), isActive: true },
-        {
-          $set: {
-            ...updateData,
-            updatedAt: new Date(),
-          },
-        },
-        { returnDocument: "after" }
-      );
-
-      return result.value;
-    } catch (error) {
-      console.error("Error in update product:", error);
-      throw error;
-    }
-  }
-
-  // Soft delete
-  async softDelete(id) {
-    try {
-      if (!ObjectId.isValid(id)) {
-        throw new Error("Invalid ID format");
-      }
-
-      const collection = this.getCollection();
-      const result = await collection.findOneAndUpdate(
-        { _id: new ObjectId(id), isActive: true },
-        {
-          $set: {
-            isActive: false,
-            updatedAt: new Date(),
-          },
-        },
-        { returnDocument: "after" }
-      );
-
-      return result.value;
-    } catch (error) {
-      console.error("Error in softDelete product:", error);
       throw error;
     }
   }
