@@ -8,33 +8,8 @@ class ProductController {
     try {
       const productData = req.body;
 
-      // Validar datos requeridos
-      const requiredFields = [
-        "name",
-        "description",
-        "price",
-        "category",
-        "sku",
-        "brand",
-      ];
-      const missingFields = requiredFields.filter(
-        (field) => !productData[field]
-      );
-
-      if (missingFields.length > 0) {
-        return res.status(400).json({
-          success: false,
-          error: "Missing required fields",
-          fields: missingFields,
-        });
-      }
-
       // Crear el producto
-      const product = await Product.create({
-        ...productData,
-        stock: productData.stock || 0,
-        discount: productData.discount || 0,
-      });
+      const product = await Product.create(productData);
 
       res.status(201).json({
         success: true,
@@ -43,17 +18,6 @@ class ProductController {
       });
     } catch (error) {
       console.error("Error creating product:", error);
-
-      // Manejar error de SKU duplicado
-      if (
-        error.message.includes("duplicate key error") &&
-        error.message.includes("sku")
-      ) {
-        return res.status(400).json({
-          success: false,
-          error: "A product with this SKU already exists",
-        });
-      }
 
       res.status(500).json({
         success: false,
@@ -109,23 +73,50 @@ class ProductController {
   // Update product
   async updateProduct(req, res) {
     try {
-      const product = await Product.update(req.params.id, req.body);
-      if (!product) {
-        return res.status(404).json({
+      const { id } = req.params;
+      const updateData = req.body;
+
+      // Validar que hay datos para actualizar
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({
           success: false,
-          error: "Product not found",
+          error: "No se proporcionaron datos para actualizar",
         });
       }
+
+      // Intentar actualizar el producto
+      const product = await Product.update(id, updateData);
+
+      if (!product) {
+        console.log("❌ Producto no encontrado");
+        return res.status(404).json({
+          success: false,
+          error: "Producto no encontrado",
+        });
+      }
+
       res.status(200).json({
         success: true,
-        message: "Product updated successfully",
+        message: "✅ Producto actualizado exitosamente",
         data: product,
       });
     } catch (error) {
-      console.error("Error updating product:", error);
+      console.error("❌ Error al actualizar producto:", {
+        error: error.message,
+        stack: error.stack,
+      });
+
+      // Manejar errores específicos
+      if (error.message.includes("Invalid ID format")) {
+        return res.status(400).json({
+          success: false,
+          error: "Formato de ID inválido",
+        });
+      }
+
       res.status(500).json({
         success: false,
-        error: "Error updating product",
+        error: "Error al actualizar el producto",
         details: error.message,
       });
     }
@@ -134,7 +125,9 @@ class ProductController {
   // Delete product
   async deleteProduct(req, res) {
     try {
-      const product = await Product.softDelete(req.params.id);
+      const { id } = req.params;
+      const product = await Product.softDelete(id);
+
       if (!product) {
         return res.status(404).json({
           success: false,
