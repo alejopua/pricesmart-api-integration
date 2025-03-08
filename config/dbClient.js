@@ -1,17 +1,10 @@
-import { MongoClient } from "mongodb";
+import mongoose from "mongoose";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 class DbClient {
   constructor() {
-    // Verificar que el archivo .env se cargó correctamente
-    if (Object.keys(process.env).length === 0) {
-      throw new Error(
-        "No environment variables loaded. Make sure .env file exists."
-      );
-    }
-
     const { DB_USER, DB_PASSWORD, DB_HOST, DB_NAME } = process.env;
 
     // Validar variables de entorno
@@ -25,10 +18,8 @@ class DbClient {
       throw new Error("Missing required environment variables");
     }
 
-    this.uri = `mongodb+srv://${DB_USER}:${DB_PASSWORD}@${DB_HOST}/?retryWrites=true&w=majority&appName=MarketNode`;
-    this.dbName = DB_NAME;
-    this.client = null;
-    this.db = null;
+    this.uri = `mongodb+srv://${DB_USER}:${DB_PASSWORD}@${DB_HOST}/${DB_NAME}?retryWrites=true&w=majority`;
+    this.isConnected = false;
 
     // Log de configuración (sin mostrar la contraseña)
     console.log("\n📝 Database Configuration:");
@@ -36,37 +27,55 @@ class DbClient {
     console.log(`- Host: ${DB_HOST}`);
     console.log(`- Database: ${DB_NAME}`);
     console.log(`- URI: mongodb+srv://${DB_USER}:****@${DB_HOST}`);
+
+    // Configurar mongoose
+    mongoose.set("strictQuery", false);
   }
 
+  /**
+   * Conecta a la base de datos MongoDB usando Mongoose
+   * @returns {Promise<object>} Conexión de Mongoose
+   */
   async connect() {
     try {
-      console.log("\n🔄 Attempting to connect to MongoDB Atlas...");
+      console.log("\n📡 Conectando a MongoDB Atlas con Mongoose...");
+
+      // Si ya está conectado, devolver la conexión existente
+      if (this.isConnected && mongoose.connection.readyState === 1) {
+        console.log("✅ Ya conectado a MongoDB Atlas");
+        return mongoose.connection;
+      }
 
       // Validar formato de URI
       if (!this.uri.startsWith("mongodb+srv://")) {
         throw new Error("Invalid MongoDB URI format");
       }
 
-      this.client = await MongoClient.connect(this.uri, {
-        serverSelectionTimeoutMS: 5000,
-        connectTimeoutMS: 10000,
-        socketTimeoutMS: 10000,
-        maxPoolSize: 10,
-        minPoolSize: 1,
+      // Intentar conectar con opciones
+      await mongoose.connect(this.uri);
+
+      this.isConnected = true;
+      console.log("✅ Conexión a MongoDB Atlas establecida con Mongoose");
+
+      // Eventos de conexión
+      mongoose.connection.on("error", (err) => {
+        console.error("❌ Error de conexión de Mongoose:", err);
+        this.isConnected = false;
       });
 
-      this.db = this.client.db(this.dbName);
+      mongoose.connection.on("disconnected", () => {
+        console.log("🔌 Mongoose desconectado");
+        this.isConnected = false;
+      });
 
-      // Verificar que podemos acceder a la base de datos
-      await this.db.command({ ping: 1 });
-      console.log("✅ MongoDB Atlas Connected Successfully");
-
-      return this.db;
+      return mongoose.connection;
     } catch (error) {
-      console.error("\n❌ Connection Error Details:");
-      console.error(`- Error Name: ${error.name}`);
-      console.error(`- Error Message: ${error.message}`);
-      if (error.code) console.error(`- Error Code: ${error.code}`);
+      this.isConnected = false;
+
+      console.error("\n❌ Error de conexión a MongoDB:");
+      console.error(`- Tipo: ${error.name}`);
+      console.error(`- Mensaje: ${error.message}`);
+      if (error.code) console.error(`- Código: ${error.code}`);
 
       // Sugerencias específicas basadas en el tipo de error
       if (error.message.includes("Authentication failed")) {
@@ -87,24 +96,27 @@ class DbClient {
     }
   }
 
+  /**
+   * Desconecta de la base de datos MongoDB
+   */
   async disconnect() {
-    if (this.client) {
+    if (mongoose.connection.readyState !== 0) {
       try {
-        await this.client.close();
-        console.log("✅ MongoDB Atlas Disconnected Successfully");
-        this.client = null;
-        this.db = null;
+        await mongoose.disconnect();
+        this.isConnected = false;
+        console.log("✅ Desconexión de MongoDB Atlas exitosa");
       } catch (error) {
-        console.error("❌ Error during disconnect:", error.message);
+        console.error("❌ Error durante la desconexión:", error.message);
       }
     }
   }
 
-  getDb() {
-    if (!this.db) {
-      throw new Error("Database not connected. Call connect() first.");
-    }
-    return this.db;
+  /**
+   * Verifica si la conexión está establecida
+   * @returns {boolean} Estado de la conexión
+   */
+  isDbConnected() {
+    return this.isConnected && mongoose.connection.readyState === 1;
   }
 }
 
