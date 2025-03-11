@@ -1,5 +1,7 @@
 # PriceSmart API Integration
 
+🚀 API Backend para la integración de PriceSmart con aplicaciones frontend
+
 ## Descripción
 
 Este proyecto implementa una integración con la API de PriceSmart para la gestión y consulta de precios y productos. La solución permite automatizar la obtención de información actualizada de productos y precios desde PriceSmart, facilitando la sincronización de datos y la toma de decisiones comerciales.
