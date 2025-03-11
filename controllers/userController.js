@@ -1,5 +1,6 @@
 import UserModel from "../models/User.js";
 import bcrypt from "bcryptjs";
+import { generateToken } from "../helpers/auth.js";
 
 class UserController {
   // Register new user
@@ -63,15 +64,25 @@ class UserController {
         });
       }
 
+      // Generate JWT token
+      const token = generateToken(userExists);
+
       res.status(200).json({
         success: true,
-        message: "User logged in successfully",
-        data: { email }, // Here you would generate and return a token
+        message: "Login successful",
+        data: {
+          user: {
+            id: userExists._id,
+            name: userExists.name,
+            email: userExists.email,
+          },
+          token,
+        },
       });
     } catch (error) {
       res.status(500).json({
         success: false,
-        message: "Error logging in",
+        message: "Error during login",
         error: error.message,
       });
     }
