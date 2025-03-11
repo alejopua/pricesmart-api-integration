@@ -94,24 +94,6 @@ class UserController {
     }
   }
 
-  // Get user profile
-  async getUserById(req, res) {
-    try {
-      const { id } = req.params;
-      res.status(200).json({
-        success: true,
-        message: "User retrieved successfully",
-        data: { id }, // Here you would fetch from your database
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: "Error retrieving user",
-        error: error.message,
-      });
-    }
-  }
-
   // Update user
   async updateUser(req, res) {
     try {
