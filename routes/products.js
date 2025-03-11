@@ -6,6 +6,7 @@ import {
   updateProduct,
   deleteProduct,
 } from "../controllers/productController.js";
+import { authenticateJWT } from "../helpers/auth.js";
 
 const router = express.Router();
 
@@ -13,7 +14,7 @@ const router = express.Router();
 router.post("/", createProduct); // Crear nuevo producto
 router.get("/", getAllProducts); // Obtener todos los productos
 router.get("/:id", getProductById); // Obtener un producto por ID
-router.put("/:id", updateProduct); // Actualizar un producto
-router.delete("/:id", deleteProduct); // Eliminar un producto
+router.put("/:id", authenticateJWT, updateProduct); // Actualizar un producto
+router.delete("/:id", authenticateJWT, deleteProduct); // Eliminar un producto
 
 export default router;
